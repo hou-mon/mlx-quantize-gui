@@ -22,10 +22,6 @@ A streamlined GUI application for converting and quantizing machine learning mod
 pip install -U mlx-lm
 ```
 
-For NeMo file support (optional):
-```bash
-pip install nemo2hf
-```
 
 ## Quick Start
 
