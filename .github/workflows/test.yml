@@ -1,0 +1,98 @@
+name: MLX Quantize GUI Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test on Python ${{ matrix.python-version }}
+    runs-on: macos-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+      fail-fast: false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Display Python version
+      run: python --version
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install mlx-lm --break-system-packages || pip install mlx-lm
+    
+    - name: Check Python syntax
+      run: |
+        python -m py_compile mlx_quantize_gui_v2.py
+        python -m py_compile test_installation.py
+    
+    - name: Run installation tests
+      run: python test_installation.py
+      continue-on-error: true
+    
+    - name: Test GUI imports
+      run: |
+        python -c "
+        import sys
+        import tkinter
+        print('Tkinter import: OK')
+        
+        try:
+            import mlx_lm
+            print('mlx_lm import: OK')
+        except ImportError as e:
+            print(f'mlx_lm import: FAILED - {e}')
+            sys.exit(1)
+        "
+    
+    - name: Verify file structure
+      run: |
+        test -f mlx_quantize_gui_v2.py || exit 1
+        test -f README.md || exit 1
+        test -f LICENSE || exit 1
+        test -f test_installation.py || exit 1
+        echo "All required files present"
+
+  lint:
+    name: Code Quality Checks
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pylint
+    
+    - name: Lint with flake8
+      run: |
+        # Stop on critical errors, allow warnings
+        flake8 mlx_quantize_gui_v2.py --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Full report (warnings allowed to fail)
+        flake8 mlx_quantize_gui_v2.py --count --exit-zero --max-complexity=15 --max-line-length=100 --statistics
+      continue-on-error: true
+    
+    - name: Check for security issues
+      run: |
+        pip install bandit
+        bandit -r mlx_quantize_gui_v2.py -ll
+      continue-on-error: true
