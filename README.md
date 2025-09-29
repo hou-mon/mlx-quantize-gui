@@ -126,13 +126,7 @@ Note: This setting is temporary and resets on reboot. Use with caution.
 ### Command Compatibility Issues
 **Fixed in v2.0** - Uses the new `mlx_lm convert` syntax for Python 3.13+.
 
-### NeMo Files
-NeMo files require conversion to HuggingFace format first:
-```bash
-pip install nemo2hf
-python -m nemo2hf --in input.nemo --out temp_dir
-```
-Then use this tool on the temp_dir.
+
 
 ### Missing mlx-lm
 Install or update:
